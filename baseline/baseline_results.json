@@ -1,0 +1,65 @@
+{
+  "timestamp": "2025-11-18T19:14:34.835726",
+  "experiment_type": "baseline_embedding_only",
+  "dataset": {
+    "total_samples": 256,
+    "train_samples": 204,
+    "test_samples": 52,
+    "features": "embedding_only",
+    "embedding_dimension": 1536,
+    "mal_range": {
+      "min": 6.7843,
+      "max": 91.1981,
+      "mean": 21.886045312500002,
+      "std": 9.616043325076257
+    }
+  },
+  "models": {
+    "Linear Regression": {
+      "train_mse": 8.160534046598067e-28,
+      "test_mse": 69.71089660212066,
+      "train_mae": 2.2692087860181632e-14,
+      "test_mae": 6.796749302553068,
+      "train_r2": 1.0,
+      "test_r2": -0.35306438408175644
+    },
+    "Random Forest": {
+      "train_mse": 11.696989571898603,
+      "test_mse": 35.580039675300874,
+      "train_mae": 2.2383601470588244,
+      "test_mae": 4.803914480769231,
+      "train_r2": 0.8863057359231337,
+      "test_r2": 0.30940374008328386
+    },
+    "Gradient Boosting": {
+      "train_mse": 0.34795169396265163,
+      "test_mse": 44.67060356991151,
+      "train_mae": 0.4920758051438742,
+      "test_mae": 5.641025047142288,
+      "train_r2": 0.996617923651533,
+      "test_r2": 0.13295904009296666
+    },
+    "SVR": {
+      "train_mse": 93.96220778806662,
+      "test_mse": 49.81212318938614,
+      "train_mae": 5.361556865174677,
+      "test_mae": 5.344641681031783,
+      "train_r2": 0.08669115246823089,
+      "test_r2": 0.03316392317064221
+    },
+    "KNN": {
+      "train_mse": 35.14567585601177,
+      "test_mse": 47.94510202964615,
+      "train_mae": 4.4987900000000005,
+      "test_mae": 5.61439,
+      "train_r2": 0.6583854565850692,
+      "test_r2": 0.06940215791878557
+    }
+  },
+  "best_model": {
+    "name": "Random Forest",
+    "test_mse": 35.580039675300874,
+    "test_mae": 4.803914480769231,
+    "test_r2": 0.30940374008328386
+  }
+}
