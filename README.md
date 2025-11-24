@@ -368,15 +368,6 @@ To extend the project:
 1. Add new features in `feature_specification.md`
 2. Update prompts in `feature_design_prompt.md` and `data_generation_prompt.md`
 3. Modify `augment_pipeline.py` to regenerate augmented data
-4. Add new models in `improved_train.py`
-
-## License
-
-[Specify your license here]
-
-## Contact
-
-[Specify contact information here]
 
 ## References
 
