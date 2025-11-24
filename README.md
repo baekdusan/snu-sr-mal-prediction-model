@@ -1,162 +1,310 @@
-# SNU SR MAL Prediction Model
+# MAL Prediction Model
 
-Maximum Acceptable Latency (MAL) prediction model for personal search queries using augmented features and machine learning.
+Maximum Acceptable Latency (MAL) prediction model for Korean natural language queries using LLM-augmented features and machine learning.
 
 ## Overview
 
-This project predicts the Maximum Acceptable Latency (MAL) for personal search queries by extracting rich linguistic, semantic, and task-related features from query text. The model uses a two-stage feature augmentation approach powered by GPT-5.1.
+This project predicts the Maximum Acceptable Latency (MAL) for natural language queries in Korean. The model uses theory-grounded features extracted from query text and augmented using GPT-5.1/GPT-5-mini to train regression models that predict how long users are willing to wait for a response.
 
 ## Project Structure
 
 ```
 mal-prediction-model/
-├── baseline/                    # Baseline model implementation
-│   ├── mal_prediction_model.py  # Baseline model using embeddings only
-│   ├── train_model.py          # Training script
-│   ├── rawdata.csv             # Raw query data
-│   └── baseline_results.json   # Baseline performance results
-│
-├── augmented/                   # Augmented feature approach
-│   ├── scripts/
-│   │   ├── augment_features_v3.py          # Feature extraction script (2-stage)
-│   │   ├── mal_prediction_model_augmented.py
-│   │   └── train_model_augmented.py
-│   ├── prompts/
-│   │   └── augment_prompt_v2.md           # System prompt for feature extraction
-│   ├── data/
-│   │   ├── rawdata.csv
-│   │   └── augmented_data_v3.csv          # Generated augmented features
-│   ├── results/
-│   │   ├── feature_schema_v3.json         # Feature schema definition
-│   │   └── batch_responses_v3.json
-│   └── archives/                          # Previous versions and experiments
-│
-└── README.md
+├── rawdata.csv                      # Original dataset (256 queries)
+├── augmented_data.csv               # Feature-augmented dataset
+├── augment_pipeline.py              # Data augmentation pipeline
+├── improved_train.py                # Advanced model training script
+├── quick_train.py                   # Quick baseline training
+├── feature_design_prompt.md         # LLM prompt for feature design
+├── data_generation_prompt.md        # LLM prompt for data generation
+├── feature_specification.md         # Designed feature specifications
+├── batch_responses/                 # LLM batch generation responses
+│   ├── batch_1_response.md
+│   ├── batch_2_response.md
+│   └── ...
+├── embeddings.pkl                   # Pre-computed embeddings
+├── requirements.txt                 # Python dependencies
+└── README.md                        # This file
 ```
 
 ## Features
 
-### Augmented Feature Categories (30+ features)
+The model uses 60+ theory-grounded features including:
 
-The model extracts features across 8 categories:
+### Core Features
+- **Query Length**: Character count, word count
+- **Task Category**: Retrieve, summarize, generate, compare, recommend, etc.
+- **Modality Type**: Text, photo, video, audio, calendar, finance, health, etc.
+- **Temporal Scope**: Momentary, day/week, month, multi-month/year
+- **Urgency Level**: Low (retrospective), medium (planning), high (now/today)
+- **Personalization Depth**: Generic, light personal context, deep personal data mining
+- **Task Requirements**: Aggregation, generation, historical search, external search
+- **Output Expectations**: Cardinality (single/few/many items)
+- **Stakes Importance**: Low (entertainment), medium (shopping), high (finance/ID)
+- **Context**: Social context, device context, location context
 
-- **TXT_*** (9 features): Text statistics (char count, word count, punctuation, etc.)
-- **LING_*** (8 features): Linguistic features (query type, tense, negation, clause complexity)
-- **SEM_*** (13 features): Semantic features (domain, entities, specificity, ambiguity)
-- **TASK_*** (9 features): Task complexity (operations, filtering, modality types)
-- **TEMP_*** (5 features): Temporal features (reference type, recency, time range)
-- **INTENT_*** (5 features): User intent (urgency, priority, emotional tone)
-- **INFO_*** (4 features): Information density (constraints, precision/recall requirements)
-- **COMP_*** (4 features): Computational demand (search space, index complexity)
+### Domain-Specific Features
+- Calendar/schedule related
+- Finance/spending related
+- Shopping/commerce related
+- Entertainment/media related
+- Health/fitness related
+- Multi-source integration requirements
+
+### Advanced Features
+- Media transformation requirements
+- Comparison tasks
+- List ordering requirements
+- Named person count
+- Goal/target presence
+- Emotional/preference inference
+
+See [feature_specification.md](feature_specification.md) for complete feature definitions and theoretical rationale.
+
+## Pipeline
+
+### 1. Feature Design (GPT-5.1)
+Analyzes all 256 queries to design theory-grounded, interpretable features for MAL prediction.
+
+```bash
+# Step 1 is included in augment_pipeline.py
+```
+
+### 2. Data Augmentation (GPT-5.1 + GPT-5-mini)
+Batch processing with structure validation:
+- Batch 1 (GPT-5.1): Rows 1-32 + Feature Value Reference
+- Batches 2-8 (GPT-5-mini): Rows 33-256 using reference from Batch 1
+
+```bash
+python augment_pipeline.py
+```
+
+### 3. Model Training
+Train multiple regression models with advanced feature engineering and hyperparameter tuning.
+
+```bash
+# Quick baseline training
+python quick_train.py
+
+# Advanced training with hyperparameter tuning
+python improved_train.py
+```
 
 ## Installation
 
+### Requirements
+- Python 3.8+
+- OpenAI API key (for data augmentation)
+
+### Setup
+
 ```bash
 # Clone the repository
-git clone https://github.com/baekdusan/snu-sr-mal-prediction-model.git
-cd snu-sr-mal-prediction-model
+git clone <repository-url>
+cd mal-prediction-model
 
 # Install dependencies
-pip install pandas numpy scikit-learn openai
+pip install -r requirements.txt
+
+# Set OpenAI API key (for augmentation pipeline)
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+### Dependencies
+```
+pandas>=1.5.0
+numpy>=1.23.0
+scikit-learn>=1.2.0
+xgboost>=1.7.0
+lightgbm>=3.3.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+openai>=1.0.0  # For augmentation pipeline
 ```
 
 ## Usage
 
-### 1. Feature Augmentation
-
-Extract rich features from raw queries using GPT-5.1:
+### Quick Start
 
 ```bash
-cd augmented/scripts
-export OPENAI_API_KEY='your-api-key'
-python augment_features_v3.py
+# Run the full pipeline (if starting from scratch)
+python augment_pipeline.py
+python improved_train.py
 ```
 
-**Two-Stage Processing:**
-- **Stage 1**: Analyzes sample queries and defines a consistent feature schema (30+ features)
-- **Stage 2**: Applies the schema to all queries in batches of 50 with validation and retry logic
+### Data Augmentation
 
-### 2. Model Training
+The augmentation pipeline (`augment_pipeline.py`) supports resume mode:
 
-Train the augmented model:
+```python
+# Resume from existing progress (default)
+python augment_pipeline.py
 
-```bash
-python train_model_augmented.py
+# Start from scratch
+# Edit augment_pipeline.py: main(resume=False)
 ```
 
-### 3. Baseline Comparison
+The pipeline automatically:
+- Skips completed steps
+- Validates JSON structure across batches
+- Ensures field consistency
+- Saves checkpoints for each batch
 
-Run the baseline model (embeddings only):
+### Model Training
 
-```bash
-cd ../../baseline
-python train_model.py
+The improved training script (`improved_train.py`) includes:
+
+**Feature Engineering:**
+- Target encoding for categorical features
+- Polynomial features for key numerical variables
+- Interaction features (chars per word, complexity score, time complexity)
+- Standard scaling
+
+**Models Trained:**
+- Ridge Regression (tuned)
+- Lasso Regression (tuned)
+- ElasticNet (tuned)
+- Random Forest (tuned)
+- LightGBM (tuned)
+- XGBoost (tuned, optional)
+- CatBoost (tuned, optional)
+- Neural Network MLP (tuned)
+
+**Hyperparameter Tuning:**
+- RandomizedSearchCV with cross-validation
+- Custom parameter grids for each model
+- Optimized for R² score
+
+## Results
+
+The best model is automatically saved to `best_improved_model.pkl` with:
+- Trained model
+- Fitted scaler
+- Feature names
+- Performance metrics (MAE, RMSE, R²)
+
+Example output:
+```
+MODEL COMPARISON (SORTED BY R²)
+Model                          MAE          RMSE         R²
+--------------------------------------------------------------------------------
+Baseline (Mean)                X.XXXX       X.XXXX       X.XXXX
+LightGBM (Tuned)              X.XXXX       X.XXXX       X.XXXX
+XGBoost (Tuned)               X.XXXX       X.XXXX       X.XXXX
+Random Forest (Tuned)         X.XXXX       X.XXXX       X.XXXX
+...
 ```
 
-## Model Performance
+## Data Format
 
-### Baseline (Embeddings Only)
-- Best Model: Linear Regression
-- Test R²: 0.536
-- Test MAE: 9.42
+### Input (rawdata.csv)
+```csv
+queries,MAL
+"오늘 점심 메뉴 추천해줘",2.5
+"지난달 카드 결제 내역 정리해서 보여줘",8.0
+...
+```
 
-### Augmented Features
-- **58 features** extracted
-- Combines embeddings (1536D) + LLM-extracted features (58)
-- Improved interpretability through human-understandable features
-
-## Key Components
-
-### Feature Extraction (`augment_features_v3.py`)
-
-- **GPT-5.1** for schema definition (accuracy)
-- **GPT-5.1-mini** for batch processing (cost-effective)
-- Batch size: 50 queries
-- Max retries: 5 per batch
-- Validation: Ensures schema alignment and data quality
-
-### Feature Schema
-
-Defined using Human Factors & Ergonomics principles:
-- Cognitive load indicators
-- Task complexity metrics
-- User intent analysis
-- Temporal context
+### Output (augmented_data.csv)
+```csv
+queries,MAL,QL_chars,QL_words,task_category,modality_type,...
+"오늘 점심 메뉴 추천해줘",2.5,15,4,recommend_content,text_note,...
+...
+```
 
 ## Technical Details
 
-### Validation & Retry Logic
+### Augmentation Pipeline
+- Uses JSON output format with structure validation
+- Validates field consistency across batches
+- No hardcoded schema - validates based on Batch 1's structure
+- Automatic resume capability with checkpoint tracking
 
-Each batch is validated for:
-1. Row count match
-2. All feature columns present
-3. No extra columns
-4. Column order consistency
-5. Missing values < 50% per column
-6. Query text matches original
+### Feature Engineering
+- Target encoding to prevent data leakage
+- Polynomial features (degree=2, interaction_only) for key variables
+- Domain-specific interaction features
+- Standard scaling for all features
 
-Failed batches are retried up to 5 times automatically.
+### Model Selection
+- Comprehensive model comparison
+- Automated hyperparameter tuning
+- Cross-validation for robust evaluation
+- Best model selected by R² score
 
-### Cost Optimization
+## Theoretical Foundation
 
-- Schema definition: `gpt-5.1` (once)
-- Batch processing: `gpt-5.1-mini` (repeated)
-- Reduces cost while maintaining quality
+Features are designed based on:
+- **Task Complexity Theory**: Aggregation, generation, multi-source integration
+- **Cognitive Load Theory**: Query length, output cardinality, specificity
+- **Urgency and Temporal Theory**: Time scope, urgency level, recency
+- **Personalization Theory**: Depth of personalization, social context
+- **Stakes Theory**: Financial, identity, schedule importance
+- **Modality Theory**: Text, media, calendar, finance, health domains
 
-## Citation
+## Troubleshooting
 
+### Common Issues
+
+**OpenAI API Errors:**
+- Ensure `OPENAI_API_KEY` is set correctly
+- Check API rate limits
+- Verify model availability (gpt-5.1, gpt-5-mini)
+
+**Field Mismatch Errors:**
+- The pipeline validates structure consistency automatically
+- If errors occur, check `ERROR_LOG.md` for details
+- Delete problematic batch files in `batch_responses/` and rerun
+
+**Missing Dependencies:**
+```bash
+pip install --upgrade -r requirements.txt
 ```
-@misc{mal-prediction-2024,
-  title={MAL Prediction Model for Personal Search Queries},
-  author={Seoul National University SR Lab},
-  year={2024}
-}
+
+**XGBoost/CatBoost Installation Issues:**
+```bash
+# macOS
+brew install libomp
+pip install xgboost catboost
+
+# Linux
+pip install xgboost catboost
+
+# Windows
+pip install xgboost catboost
 ```
+
+## Performance Optimization
+
+- Use `quick_train.py` for fast prototyping
+- Adjust `n_iter` in RandomizedSearchCV to balance speed vs. accuracy
+- Set `n_jobs=-1` to use all CPU cores
+- Use `model="haiku"` for faster, cheaper augmentation (requires code modification)
+
+## Contributing
+
+To extend the project:
+
+1. Add new features in `feature_specification.md`
+2. Update prompts in `feature_design_prompt.md` and `data_generation_prompt.md`
+3. Modify `augment_pipeline.py` to regenerate augmented data
+4. Add new models in `improved_train.py`
 
 ## License
 
-MIT License
+[Specify your license here]
 
 ## Contact
 
-For questions or issues, please open an issue on GitHub.
+[Specify contact information here]
+
+## References
+
+- Feature design based on cognitive psychology and HCI latency research
+- LLM augmentation using OpenAI GPT-5.1 and GPT-5-mini
+- Machine learning models from scikit-learn, XGBoost, LightGBM, CatBoost
+
+## Acknowledgments
+
+- OpenAI for GPT-5.1 and GPT-5-mini models
+- scikit-learn, XGBoost, LightGBM, CatBoost development teams
