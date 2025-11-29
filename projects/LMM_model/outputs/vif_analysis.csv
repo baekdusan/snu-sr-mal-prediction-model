@@ -1,0 +1,16 @@
+feature,VIF
+embedding_axis_complexity,62.82790660917948
+cognitive_load_estimate,33.90263463192066
+task_family,12.473780288722843
+requires_personal_history,10.714141841204787
+expected_answer_length,7.241674709822747
+requires_aggregation,5.791102818794751
+device_context_implied,3.6314215574959436
+time_urgency_level,2.934242242376495
+planning_horizon,2.83299045826989
+time_window_length,2.649317965903676
+has_comparative_phrase,2.1640395614088908
+novelty_seeking,1.7391022007813042
+social_context_strength,1.5584641722586121
+output_requires_multimedia_creation,1.3935326793327425
+needs_health_data,1.361945952889886

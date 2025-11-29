@@ -1,35 +1,36 @@
 import pandas as pd
 import numpy as np
 
-# Load all_data.xlsx
-all_data = pd.read_excel('/Users/dusanbaek/mal-prediction-model/LMM_model/all_data.xlsx')
+# Load all_data.xlsx (2560 rows: 256 queries × 10 participants)
+all_data = pd.read_excel('/Users/dusanbaek/mal-prediction-model/projects/LMM_model/data/all_data.xlsx')
 print(f"all_data shape: {all_data.shape}")
 print(f"all_data columns: {all_data.columns.tolist()}")
 
-# Load augmented_data.csv
-augmented_data = pd.read_csv('/Users/dusanbaek/mal-prediction-model/LMM_model/augmented_data.csv')
+# Load augmented_data.csv (256 rows: unique queries with features)
+augmented_data = pd.read_csv('/Users/dusanbaek/mal-prediction-model/projects/LMM_model/data/augmented_data.csv')
 print(f"\naugmented_data shape: {augmented_data.shape}")
 print(f"augmented_data columns: {augmented_data.columns.tolist()[:5]}...")  # Show first 5 columns
-
-# Add query_id to all_data (row index starting from 1)
-all_data['query_id'] = range(1, len(all_data) + 1)
 
 # Rename columns for consistency
 all_data = all_data.rename(columns={'participant': 'participant_id'})
 
-# Join the two datasets on 'queries'
-merged_data = all_data.merge(augmented_data, on='queries', how='left', suffixes=('', '_aug'))
+# Add query_id based on unique queries (1-256)
+unique_queries = augmented_data['queries'].tolist()
+query_to_id = {query: idx + 1 for idx, query in enumerate(unique_queries)}
+all_data['query_id'] = all_data['queries'].map(query_to_id)
 
-# Select and reorder columns
-# participant_id, query_id, MAL, and all features (feat1~featN)
-feature_cols = [col for col in augmented_data.columns if col.startswith('QL_') or col.startswith('feat')]
+# Extract feature columns from augmented_data (exclude 'queries' and 'MAL')
+feature_cols = [col for col in augmented_data.columns if col not in ['queries', 'MAL']]
+
+# Join: keep all_data's MAL values, add features from augmented_data
+merged_data = all_data.merge(
+    augmented_data[['queries'] + feature_cols],
+    on='queries',
+    how='left'
+)
+
+# Select and reorder columns: participant_id, query_id, MAL, features
 final_columns = ['participant_id', 'query_id', 'MAL'] + feature_cols
-
-# If there are duplicate MAL columns, use the one from all_data
-if 'MAL_aug' in merged_data.columns:
-    merged_data = merged_data.drop(columns=['MAL_aug'])
-
-# Select final columns
 final_data = merged_data[final_columns]
 
 print(f"\nFinal data shape: {final_data.shape}")
@@ -39,10 +40,21 @@ print(final_data.head())
 
 # Check for any missing values
 print(f"\nMissing values per column:")
-print(final_data.isnull().sum()[final_data.isnull().sum() > 0])
+missing_summary = final_data.isnull().sum()
+if missing_summary.sum() > 0:
+    print(missing_summary[missing_summary > 0])
+else:
+    print("No missing values!")
+
+# Verify data integrity
+print(f"\nData integrity check:")
+print(f"- Unique participants: {final_data['participant_id'].nunique()}")
+print(f"- Unique queries: {final_data['query_id'].nunique()}")
+print(f"- Expected rows (256 queries × 10 participants): 2560")
+print(f"- Actual rows: {len(final_data)}")
 
 # Save the final dataset
-output_path = '/Users/dusanbaek/mal-prediction-model/LMM_model/final_dataset.csv'
+output_path = '/Users/dusanbaek/mal-prediction-model/projects/LMM_model/data/final_dataset.csv'
 final_data.to_csv(output_path, index=False)
 print(f"\nDataset saved to: {output_path}")
 print(f"Total rows: {len(final_data)}")

@@ -1,0 +1,12 @@
+feature,order
+needs_health_data,1
+expected_answer_length,2
+planning_horizon,3
+time_window_length,4
+time_urgency_level,5
+novelty_seeking,6
+requires_aggregation,7
+has_comparative_phrase,8
+device_context_implied,9
+output_requires_multimedia_creation,10
+social_context_strength,11

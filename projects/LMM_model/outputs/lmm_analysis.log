@@ -1,0 +1,257 @@
+================================================================================
+Linear Mixed Model Analysis for MAL Prediction
+================================================================================
+
+1. Loading data...
+   Data shape: (2560, 50)
+   Participants: 80
+   Queries: 256
+
+2. Preparing variables...
+   Number of features: 47
+   Converted 12 categorical features to numeric
+
+   Checking for multicollinearity...
+   Checking for perfect correlations...
+   Final number of features: 47
+
+   Creating log(MAL) transformation...
+   MAL range: [0.61, 211.28]
+   log(MAL) range: [-0.50, 5.35]
+
+3. Building Linear Mixed Model...
+   Model: log_MAL ~ features + (1|participant_id) + (1|query_id)
+   Fixed effects: β0 + β'X (intercept + all features)
+   Random effects: u_participant + v_query
+
+4. Fitting Model 1: Random intercept for participant...
+   (This may take a few minutes...)
+
+   ✓ Model 1 fitted successfully
+
+   Log-Likelihood: -1734.50
+   AIC: nan
+   BIC: nan
+
+5. Fitting Model 2: Random intercept for query...
+
+   ✓ Model 2 fitted successfully
+
+   Log-Likelihood: -3152.75
+   AIC: nan
+   BIC: nan
+
+================================================================================
+6. MODEL 1 SUMMARY (Random: Participant)
+================================================================================
+                       Mixed Linear Model Regression Results
+===================================================================================
+Model:                     MixedLM          Dependent Variable:          log_MAL   
+No. Observations:          2560             Method:                      REML      
+No. Groups:                80               Scale:                       0.1819    
+Min. group size:           32               Log-Likelihood:              -1734.4994
+Max. group size:           32               Converged:                   Yes       
+Mean group size:           32.0                                                    
+-----------------------------------------------------------------------------------
+                                         Coef.  Std.Err.   z    P>|z| [0.025 0.975]
+-----------------------------------------------------------------------------------
+Intercept                                 2.237    0.212 10.564 0.000  1.822  2.653
+QL_char                                  -0.000    0.004 -0.064 0.949 -0.007  0.007
+QL_tokens                                 0.024    0.019  1.233 0.218 -0.014  0.061
+task_family                              -0.036    0.013 -2.729 0.006 -0.062 -0.010
+info_source_type                          0.007    0.011  0.684 0.494 -0.014  0.029
+requires_personal_history                 0.209    0.080  2.603 0.009  0.052  0.367
+requires_aggregation                     -0.122    0.054 -2.242 0.025 -0.228 -0.015
+requires_summarization                   -0.265    0.186 -1.428 0.153 -0.629  0.099
+requires_generation                      -0.043    0.071 -0.608 0.543 -0.183  0.096
+temporal_reference_type                   0.023    0.018  1.290 0.197 -0.012  0.058
+time_urgency_level                       -0.115    0.049 -2.371 0.018 -0.211 -0.020
+stakes_level                             -0.012    0.036 -0.345 0.730 -0.083  0.058
+modality_primary                         -0.002    0.014 -0.176 0.860 -0.030  0.025
+domain_category                           0.014    0.008  1.850 0.064 -0.001  0.029
+query_goal_specificity                    0.029    0.051  0.564 0.573 -0.071  0.129
+expected_answer_length                    0.375    0.118  3.180 0.001  0.144  0.607
+interaction_pattern                       0.004    0.036  0.125 0.900 -0.065  0.074
+has_comparative_phrase                    0.199    0.090  2.216 0.027  0.023  0.374
+has_temporal_diff_phrase                 -0.053    0.086 -0.612 0.541 -0.221  0.116
+time_window_length                        0.063    0.023  2.796 0.005  0.019  0.107
+personalization_intensity                -0.022    0.057 -0.391 0.696 -0.134  0.089
+needs_location_context                   -0.002    0.034 -0.060 0.952 -0.068  0.064
+needs_calendar_context                   -0.090    0.060 -1.492 0.136 -0.208  0.028
+needs_communication_logs                 -0.053    0.065 -0.826 0.409 -0.180  0.073
+needs_media_history                      -0.054    0.059 -0.912 0.362 -0.170  0.062
+needs_financial_logs                      0.091    0.068  1.351 0.177 -0.041  0.224
+needs_health_data                        -0.188    0.058 -3.235 0.001 -0.302 -0.074
+recommendation_type                      -0.011    0.013 -0.843 0.399 -0.035  0.014
+requires_cross_app_integration            0.047    0.046  1.014 0.311 -0.044  0.137
+requires_similarity_search               -0.094    0.066 -1.417 0.157 -0.224  0.036
+requires_visual_understanding            -0.002    0.066 -0.025 0.980 -0.131  0.127
+requires_list_dedup_grouping              0.000    0.053  0.004 0.997 -0.103  0.104
+explicit_output_structure                 0.043    0.035  1.205 0.228 -0.027  0.112
+urgency_phrase_present                    0.071    0.091  0.780 0.435 -0.107  0.249
+planning_horizon                          0.068    0.024  2.840 0.005  0.021  0.114
+social_context_strength                   0.050    0.025  1.989 0.047  0.001  0.098
+contains_monetary_amount                  0.013    0.072  0.177 0.860 -0.128  0.153
+monetary_context_type                    -0.025    0.016 -1.625 0.104 -0.056  0.005
+device_context_implied                   -0.053    0.024 -2.179 0.029 -0.101 -0.005
+cognitive_load_estimate                  -0.150    0.063 -2.396 0.017 -0.273 -0.027
+novelty_seeking                          -0.139    0.059 -2.368 0.018 -0.254 -0.024
+habit_analysis                           -0.068    0.049 -1.384 0.166 -0.164  0.028
+food_context_type                         0.071    0.039  1.830 0.067 -0.005  0.147
+output_requires_multimedia_creation       0.341    0.165  2.069 0.039  0.018  0.665
+output_requires_behavior_change_guidance  0.059    0.056  1.039 0.299 -0.052  0.169
+embedding_cluster_id                     -0.019    0.015 -1.258 0.208 -0.049  0.011
+embedding_axis_complexity                 0.478    0.200  2.390 0.017  0.086  0.871
+embedding_axis_urgency                    0.044    0.125  0.352 0.725 -0.201  0.290
+participant_id Var                        0.470    0.180                           
+===================================================================================
+
+
+================================================================================
+7. MODEL 2 SUMMARY (Random: Query)
+================================================================================
+                       Mixed Linear Model Regression Results
+===================================================================================
+Model:                     MixedLM          Dependent Variable:          log_MAL   
+No. Observations:          2560             Method:                      REML      
+No. Groups:                256              Scale:                       0.6410    
+Min. group size:           10               Log-Likelihood:              -3152.7549
+Max. group size:           10               Converged:                   Yes       
+Mean group size:           10.0                                                    
+-----------------------------------------------------------------------------------
+                                         Coef.  Std.Err.   z    P>|z| [0.025 0.975]
+-----------------------------------------------------------------------------------
+Intercept                                 2.186    0.385  5.680 0.000  1.432  2.940
+QL_char                                   0.005    0.007  0.765 0.444 -0.008  0.019
+QL_tokens                                 0.012    0.037  0.322 0.747 -0.061  0.085
+task_family                              -0.017    0.026 -0.672 0.501 -0.068  0.033
+info_source_type                          0.008    0.021  0.393 0.694 -0.033  0.050
+requires_personal_history                 0.017    0.157  0.107 0.915 -0.290  0.324
+requires_aggregation                      0.014    0.106  0.130 0.897 -0.194  0.222
+requires_summarization                   -0.521    0.362 -1.438 0.151 -1.231  0.189
+requires_generation                      -0.061    0.139 -0.438 0.661 -0.334  0.212
+temporal_reference_type                  -0.050    0.035 -1.445 0.149 -0.118  0.018
+time_urgency_level                       -0.129    0.094 -1.365 0.172 -0.314  0.056
+stakes_level                             -0.030    0.070 -0.421 0.674 -0.168  0.108
+modality_primary                         -0.001    0.028 -0.037 0.970 -0.055  0.053
+domain_category                          -0.014    0.015 -0.980 0.327 -0.043  0.014
+query_goal_specificity                    0.026    0.099  0.267 0.789 -0.167  0.220
+expected_answer_length                    0.317    0.231  1.373 0.170 -0.135  0.768
+interaction_pattern                      -0.005    0.069 -0.073 0.942 -0.141  0.131
+has_comparative_phrase                   -0.065    0.174 -0.372 0.710 -0.407  0.277
+has_temporal_diff_phrase                  0.086    0.168  0.513 0.608 -0.243  0.414
+time_window_length                        0.017    0.044  0.389 0.698 -0.069  0.103
+personalization_intensity                 0.077    0.111  0.699 0.484 -0.140  0.294
+needs_location_context                    0.044    0.066  0.673 0.501 -0.084  0.173
+needs_calendar_context                   -0.172    0.117 -1.464 0.143 -0.401  0.058
+needs_communication_logs                 -0.146    0.125 -1.168 0.243 -0.392  0.099
+needs_media_history                      -0.243    0.115 -2.110 0.035 -0.468 -0.017
+needs_financial_logs                     -0.130    0.131 -0.986 0.324 -0.387  0.128
+needs_health_data                        -0.342    0.113 -3.029 0.002 -0.563 -0.121
+recommendation_type                      -0.005    0.025 -0.215 0.830 -0.053  0.043
+requires_cross_app_integration            0.039    0.090  0.437 0.662 -0.137  0.215
+requires_similarity_search               -0.121    0.129 -0.937 0.349 -0.374  0.132
+requires_visual_understanding            -0.180    0.128 -1.406 0.160 -0.430  0.071
+requires_list_dedup_grouping             -0.129    0.103 -1.248 0.212 -0.330  0.073
+explicit_output_structure                 0.120    0.069  1.749 0.080 -0.014  0.255
+urgency_phrase_present                    0.333    0.176  1.888 0.059 -0.013  0.679
+planning_horizon                          0.056    0.046  1.212 0.226 -0.035  0.147
+social_context_strength                   0.054    0.048  1.117 0.264 -0.041  0.149
+contains_monetary_amount                 -0.039    0.139 -0.278 0.781 -0.312  0.234
+monetary_context_type                     0.004    0.030  0.131 0.896 -0.056  0.063
+device_context_implied                   -0.026    0.047 -0.543 0.587 -0.119  0.067
+cognitive_load_estimate                  -0.038    0.122 -0.314 0.754 -0.278  0.201
+novelty_seeking                          -0.174    0.114 -1.527 0.127 -0.398  0.049
+habit_analysis                           -0.106    0.096 -1.106 0.269 -0.293  0.082
+food_context_type                         0.040    0.075  0.529 0.597 -0.108  0.187
+output_requires_multimedia_creation       0.801    0.320  2.502 0.012  0.173  1.429
+output_requires_behavior_change_guidance  0.130    0.110  1.188 0.235 -0.085  0.345
+embedding_cluster_id                     -0.010    0.030 -0.336 0.737 -0.069  0.049
+embedding_axis_complexity                 0.466    0.390  1.195 0.232 -0.298  1.230
+embedding_axis_urgency                   -0.303    0.243 -1.246 0.213 -0.780  0.174
+query_id Var                              0.007    0.009                           
+===================================================================================
+/Users/dusanbaek/mal-prediction-model/projects/LMM_model/scripts/lmm_analysis.py:259: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  participant_re_values = [re[0] for re in participant_re.values()]
+/Users/dusanbaek/mal-prediction-model/projects/LMM_model/scripts/lmm_analysis.py:269: FutureWarning: Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+  query_re_values = [re[0] for re in query_re.values()]
+
+
+================================================================================
+8. VARIANCE COMPONENTS
+================================================================================
+
+Model 1 (Participant Random Effect):
+  Participant variance (u): 0.4697
+  Residual variance (ε):    0.1819
+  Total variance:           0.6515
+  ICC (Participant):        0.7208
+
+Model 2 (Query Random Effect):
+  Query variance (v):       0.0067
+  Residual variance (ε):    0.6410
+  Total variance:           0.6477
+  ICC (Query):              0.0104
+
+================================================================================
+9. SIGNIFICANT FIXED EFFECTS (p < 0.05)
+================================================================================
+
+Model 1: 17 significant features
+                            feature  estimate  std_error      p_value
+                          Intercept  2.237426   0.211807 4.399368e-26
+                 participant_id Var  2.582140   0.422608 9.962418e-10
+                  needs_health_data -0.188002   0.058107 1.214440e-03
+             expected_answer_length  0.375439   0.118078 1.474877e-03
+                   planning_horizon  0.067701   0.023840 4.513548e-03
+                 time_window_length  0.063086   0.022563 5.173086e-03
+                        task_family -0.036047   0.013210 6.357912e-03
+          requires_personal_history  0.209088   0.080332 9.246482e-03
+            cognitive_load_estimate -0.150193   0.062678 1.656277e-02
+          embedding_axis_complexity  0.478368   0.200171 1.685747e-02
+                 time_urgency_level -0.115345   0.048645 1.773336e-02
+                    novelty_seeking -0.139141   0.058751 1.786848e-02
+               requires_aggregation -0.121828   0.054330 2.493700e-02
+             has_comparative_phrase  0.198658   0.089656 2.670714e-02
+             device_context_implied -0.053146   0.024393 2.934792e-02
+output_requires_multimedia_creation  0.341469   0.165061 3.857055e-02
+            social_context_strength  0.049576   0.024927 4.671957e-02
+
+   ✓ Saved: ../outputs/lmm_model1_coefficients.csv
+   ✓ Saved: ../outputs/lmm_model2_coefficients.csv
+
+10. Creating diagnostic plots...
+   ✓ Saved: ../outputs/lmm_diagnostics.png
+
+11. Plotting random effects distributions...
+   ✓ Saved: ../outputs/random_effects.png
+
+12. Saving models...
+   ✓ Saved: ../models/lmm_model1.pkl
+   ✓ Saved: ../models/lmm_model2.pkl
+
+================================================================================
+13. MODEL COMPARISON
+================================================================================
+                   Model  Log-Likelihood  AIC  BIC  Random Variance  Residual Variance      ICC
+Model 1 (Participant RE)    -1734.499388  NaN  NaN         0.469655           0.181886 0.720837
+      Model 2 (Query RE)    -3152.754915  NaN  NaN         0.006712           0.640973 0.010363
+
+================================================================================
+✅ LINEAR MIXED MODEL ANALYSIS COMPLETE!
+================================================================================
+
+Files created:
+  - ../models/lmm_model1.pkl (participant random effect model)
+  - ../models/lmm_model2.pkl (query random effect model)
+  - ../outputs/lmm_model1_coefficients.csv (fixed effects for model 1)
+  - ../outputs/lmm_model2_coefficients.csv (fixed effects for model 2)
+  - ../outputs/lmm_diagnostics.png (diagnostic plots)
+  - ../outputs/random_effects.png (random effects distributions)
+
+Note: For crossed random effects (both participant AND query),
+      consider using pymer4 or R's lme4 package.
+
+Next steps:
+  - Use these models for percentile predictions
+  - For new queries: extract features → predict log(MAL) → calculate percentiles

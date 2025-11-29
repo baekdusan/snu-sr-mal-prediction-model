@@ -19,15 +19,19 @@ print("=" * 80)
 
 # 1. Load data
 print("\n1. Loading data...")
-data = pd.read_csv('final_dataset.csv')
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+data_path = os.path.join(script_dir, '../data/final_dataset.csv')
+data = pd.read_csv(data_path)
 print(f"   Data shape: {data.shape}")
 print(f"   Participants: {data['participant_id'].nunique()}")
 print(f"   Queries: {data['query_id'].nunique()}")
 
 # 2. Prepare variables
 print("\n2. Preparing variables...")
-# Get feature columns
-feature_cols = [col for col in data.columns if col.startswith('QL_')]
+# Get feature columns (all except ID columns and target variable)
+exclude_cols = ['participant_id', 'query_id', 'MAL', 'log_MAL']
+feature_cols = [col for col in data.columns if col not in exclude_cols]
 print(f"   Number of features: {len(feature_cols)}")
 
 # Convert categorical features to numeric if needed
@@ -69,6 +73,12 @@ if high_corr_features:
     feature_cols = [col for col in feature_cols if col not in high_corr_features]
 
 print(f"   Final number of features: {len(feature_cols)}")
+
+# Create log-transformed MAL
+print("\n   Creating log(MAL) transformation...")
+data['log_MAL'] = np.log(data['MAL'])
+print(f"   MAL range: [{data['MAL'].min():.2f}, {data['MAL'].max():.2f}]")
+print(f"   log(MAL) range: [{data['log_MAL'].min():.2f}, {data['log_MAL'].max():.2f}]")
 
 # 3. Model specification
 print("\n3. Building Linear Mixed Model...")
@@ -166,8 +176,10 @@ print(f"\nModel 1: {len(sig_features1)} significant features")
 print(sig_features1.head(20).to_string(index=False))
 
 # Save coefficients
-coef_df1.to_csv('lmm_model1_coefficients.csv', index=False)
-print("\n   ✓ Saved: lmm_model1_coefficients.csv")
+output_dir = os.path.join(script_dir, '../outputs')
+os.makedirs(output_dir, exist_ok=True)
+coef_df1.to_csv(os.path.join(output_dir, 'lmm_model1_coefficients.csv'), index=False)
+print("\n   ✓ Saved: ../outputs/lmm_model1_coefficients.csv")
 
 coef_df2 = pd.DataFrame({
     'feature': result2.params.index,
@@ -176,8 +188,8 @@ coef_df2 = pd.DataFrame({
     'p_value': result2.pvalues.values
 })
 coef_df2 = coef_df2.sort_values('p_value')
-coef_df2.to_csv('lmm_model2_coefficients.csv', index=False)
-print("   ✓ Saved: lmm_model2_coefficients.csv")
+coef_df2.to_csv(os.path.join(output_dir, 'lmm_model2_coefficients.csv'), index=False)
+print("   ✓ Saved: ../outputs/lmm_model2_coefficients.csv")
 
 # 9. Diagnostic plots
 print("\n10. Creating diagnostic plots...")
@@ -234,8 +246,8 @@ axes[1, 2].set_title('Model 2: Residual Distribution')
 axes[1, 2].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('lmm_diagnostics.png', dpi=300, bbox_inches='tight')
-print("   ✓ Saved: lmm_diagnostics.png")
+plt.savefig(os.path.join(output_dir, 'lmm_diagnostics.png'), dpi=300, bbox_inches='tight')
+print("   ✓ Saved: ../outputs/lmm_diagnostics.png")
 
 # 10. Random effects distribution
 print("\n11. Plotting random effects distributions...")
@@ -263,20 +275,23 @@ axes[1].set_title(f'Query Random Effects (v)\nSD = {np.std(query_re_values):.3f}
 axes[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('random_effects.png', dpi=300, bbox_inches='tight')
-print("   ✓ Saved: random_effects.png")
+plt.savefig(os.path.join(output_dir, 'random_effects.png'), dpi=300, bbox_inches='tight')
+print("   ✓ Saved: ../outputs/random_effects.png")
 
 # 11. Save models
 print("\n12. Saving models...")
 import pickle
 
-with open('lmm_model1.pkl', 'wb') as f:
-    pickle.dump(result1, f)
-print("   ✓ Saved: lmm_model1.pkl")
+models_dir = os.path.join(script_dir, '../models')
+os.makedirs(models_dir, exist_ok=True)
 
-with open('lmm_model2.pkl', 'wb') as f:
+with open(os.path.join(models_dir, 'lmm_model1.pkl'), 'wb') as f:
+    pickle.dump(result1, f)
+print("   ✓ Saved: ../models/lmm_model1.pkl")
+
+with open(os.path.join(models_dir, 'lmm_model2.pkl'), 'wb') as f:
     pickle.dump(result2, f)
-print("   ✓ Saved: lmm_model2.pkl")
+print("   ✓ Saved: ../models/lmm_model2.pkl")
 
 # 12. Model comparison
 print("\n" + "=" * 80)
@@ -300,12 +315,12 @@ print("\n" + "=" * 80)
 print("✅ LINEAR MIXED MODEL ANALYSIS COMPLETE!")
 print("=" * 80)
 print("\nFiles created:")
-print("  - lmm_model1.pkl (participant random effect model)")
-print("  - lmm_model2.pkl (query random effect model)")
-print("  - lmm_model1_coefficients.csv (fixed effects for model 1)")
-print("  - lmm_model2_coefficients.csv (fixed effects for model 2)")
-print("  - lmm_diagnostics.png (diagnostic plots)")
-print("  - random_effects.png (random effects distributions)")
+print("  - ../models/lmm_model1.pkl (participant random effect model)")
+print("  - ../models/lmm_model2.pkl (query random effect model)")
+print("  - ../outputs/lmm_model1_coefficients.csv (fixed effects for model 1)")
+print("  - ../outputs/lmm_model2_coefficients.csv (fixed effects for model 2)")
+print("  - ../outputs/lmm_diagnostics.png (diagnostic plots)")
+print("  - ../outputs/random_effects.png (random effects distributions)")
 print("\nNote: For crossed random effects (both participant AND query),")
 print("      consider using pymer4 or R's lme4 package.")
 print("\nNext steps:")

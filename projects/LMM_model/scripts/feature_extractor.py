@@ -122,49 +122,51 @@ Extract ALL features for the following query:
 1. Follow the feature definitions EXACTLY as specified in the feature specification
 2. For binary features: return 0 or 1
 3. For ordinal features: return the appropriate integer level (0, 1, 2, 3, etc.)
-4. For categorical features: return the exact category string as shown in examples
+4. For categorical features: return the exact category string as shown in the examples
 5. For numeric features: calculate the exact value
-6. Include ALL features shown in the example (51+ features)
-7. Match the exact JSON structure from the examples
+6. Include EVERY feature shown in the example (51+ fields, no omissions)
+7. Match the JSON structure from the example exactly (same keys, same casing)
 
 **Output Format:**
-Return ONLY a valid JSON object with ALL features. Do NOT include any markdown code blocks, explanations, or additional text.
-Just return the raw JSON object starting with {{ and ending with }}.
+Return ONLY the JSON object with all features. Do NOT include code fences, explanations, or extra text.
+The first character must be {{ and the last character must be }} (standard JSON object).
 
 Now extract features for: "{query}"
 """
         return prompt
 
     def _parse_features_from_response(self, response_text: str) -> Dict[str, Any]:
-        """Parse features from Claude's response"""
-        # Try to find JSON in response
+        """Parse features from model response with robust cleanup."""
+        normalized = self._extract_json_payload(response_text)
         try:
-            # First try direct parse
-            features = json.loads(response_text)
-            return features
-        except json.JSONDecodeError:
-            # Try to extract JSON from markdown code block
-            if "```json" in response_text:
-                start = response_text.find("```json") + 7
-                end = response_text.find("```", start)
-                json_str = response_text[start:end].strip()
-                features = json.loads(json_str)
-                return features
-            elif "```" in response_text:
-                start = response_text.find("```") + 3
-                end = response_text.find("```", start)
-                json_str = response_text[start:end].strip()
-                features = json.loads(json_str)
-                return features
-            else:
-                # Try to find any JSON object
-                import re
-                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-                if json_match:
-                    features = json.loads(json_match.group())
-                    return features
-                else:
-                    raise ValueError(f"Could not parse JSON from response: {response_text[:200]}...")
+            return json.loads(normalized)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Could not parse JSON from response: {response_text[:200]}...") from exc
+
+    @staticmethod
+    def _extract_json_payload(text: str) -> str:
+        """Strip markdown/code fences and isolate the JSON object."""
+        cleaned = text.strip()
+
+        # Remove markdown fences like ```json ... ```
+        if cleaned.startswith("```"):
+            parts = cleaned.split("```")
+            # parts = ['', 'json', '<content>', ...] or ['', '<content>', ...]
+            for chunk in parts[1:]:
+                chunk = chunk.strip()
+                if not chunk:
+                    continue
+                if chunk.startswith("json"):
+                    return chunk[4:].strip()
+                return chunk
+
+        # Fall back to extracting the first {...} block
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            return cleaned[start:end + 1]
+
+        return cleaned
 
     def extract_batch(self, queries: list) -> list:
         """

@@ -139,51 +139,61 @@ Please provide the Feature Specification following the output format specified i
     return response
 
 
-def step2_batch1_generation(rows: list[dict], feature_spec: str) -> tuple[str, str]:
-    """Step 2: Generate Batch 1 with GPT-5.1 to create Feature_Value_Reference (WITHOUT MAL)"""
+def step2_create_reference_sample(all_rows: list[dict], feature_spec: str, sample_size: int = 32) -> tuple[str, list[dict]]:
+    """Step 2: Create Feature_Value_Reference using stratified sample from entire dataset"""
     print("\n" + "="*60)
-    print("STEP 2: Data Generation Batch 1/8 (GPT-5.1) - NO MAL VALUES")
+    print(f"STEP 2: Creating Reference Sample ({sample_size} samples from {len(all_rows)} rows)")
     print("="*60)
 
+    # Stratified sampling: evenly sample across entire dataset
+    indices = [int(i * len(all_rows) / sample_size) for i in range(sample_size)]
+    sampled_rows = [all_rows[i] for i in indices]
+
+    print(f"  ✓ Sampled indices: {indices[:5]}...{indices[-5:]} (showing first/last 5)")
+
     prompt = load_prompt(DATA_GEN_PROMPT_PATH)
-    dataset_text = format_csv_for_prompt(rows, exclude_mal=True)  # EXCLUDE MAL
+    dataset_text = format_csv_for_prompt(sampled_rows, exclude_mal=True)  # EXCLUDE MAL
 
-    user_message = f"""This is batch 1/8.
+    user_message = f"""This is the REFERENCE SAMPLE creation step.
 
-I have the Feature Specification and the first batch of queries (rows 1-32).
+I have the Feature Specification and a stratified sample of {sample_size} queries from the entire dataset of {len(all_rows)} rows.
+This sample is distributed across the full dataset to ensure diversity and prevent bias.
 
 IMPORTANT: You are NOT given the MAL values. Generate feature values based solely on query characteristics.
 
 Feature Specification:
 {feature_spec}
 
-Dataset (CSV format - queries only):
+Reference Sample Dataset (CSV format - queries only):
 ```csv
 {dataset_text}
 ```
 
-Please generate the expanded dataset following the output format. Remember to include the Feature_Value_Reference section since this is batch 1/8.
+Please generate the expanded dataset following the output format.
 
-CRITICAL: Do NOT include MAL column in your JSON output. Only include 'queries' and the feature columns."""
+CRITICAL INSTRUCTIONS:
+1. Do NOT include MAL column in your JSON output. Only include 'queries' and the feature columns.
+2. Include a comprehensive Feature_Value_Reference section that explains:
+   - Scoring rationale for each feature
+   - Example values and their meanings
+   - Boundary cases and edge cases
+3. This reference will guide ALL 8 batches of data generation, so be thorough and consistent."""
 
     response = call_openai(prompt, user_message, MODEL_HIGH)
 
-    # Extract CSV and Feature_Value_Reference from response
-    # Save full response
+    # Save reference response
     BATCH_RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
-    batch_path = BATCH_RESPONSES_DIR / "batch_1_response.md"
-    with open(batch_path, "w", encoding="utf-8") as f:
+    ref_path = BATCH_RESPONSES_DIR / "reference_sample.md"
+    with open(ref_path, "w", encoding="utf-8") as f:
         f.write(response)
 
-    print(f"✓ Batch 1 response saved to: {batch_path}")
+    print(f"✓ Reference sample response saved to: {ref_path}")
 
-    # Extract Feature_Value_Reference (text between the section header and next section)
-    # This is a simple extraction - you may need to adjust based on actual response format
-    return response, response
+    return response, sampled_rows
 
 
-def step3_subsequent_batches(batch_num: int, rows: list[dict], feature_spec: str, feature_ref: str) -> str:
-    """Step 3: Generate subsequent batches with GPT-5-mini (WITHOUT MAL)"""
+def step3_batch_generation(batch_num: int, rows: list[dict], feature_spec: str, feature_ref: str) -> str:
+    """Step 3: Generate batches 1-8 using reference sample (using GPT-5-mini)"""
     print("\n" + "="*60)
     print(f"STEP 3: Data Generation Batch {batch_num}/8 (GPT-5-mini) - NO MAL VALUES")
     print("="*60)
@@ -196,14 +206,14 @@ def step3_subsequent_batches(batch_num: int, rows: list[dict], feature_spec: str
 
     user_message = f"""This is batch {batch_num}/8.
 
-I have the Feature Specification, Feature_Value_Reference from batch 1, and the current batch of queries (rows {start_row}-{end_row}).
+I have the Feature Specification, Feature_Value_Reference from the stratified reference sample, and the current batch of queries (rows {start_row}-{end_row}).
 
 IMPORTANT: You are NOT given the MAL values. Generate feature values based solely on query characteristics.
 
 Feature Specification:
 {feature_spec}
 
-Feature_Value_Reference (from batch 1):
+Feature_Value_Reference (from stratified reference sample):
 {feature_ref}
 
 Dataset (CSV format - queries only):
@@ -211,7 +221,7 @@ Dataset (CSV format - queries only):
 {dataset_text}
 ```
 
-Please generate the expanded dataset following the EXACT same rules as batch 1. Use the Feature_Value_Reference to ensure consistency.
+Please generate the expanded dataset following the EXACT same rules as the reference sample. Use the Feature_Value_Reference to ensure consistency across all batches.
 
 CRITICAL: Do NOT include MAL column in your JSON output. Only include 'queries' and the feature columns."""
 
@@ -405,11 +415,11 @@ def check_existing_files() -> dict:
     """Check which steps have already been completed."""
     status = {
         'feature_spec': FEATURE_SPEC_PATH.exists(),
-        'batch_1': (BATCH_RESPONSES_DIR / 'batch_1_response.md').exists(),
+        'reference_sample': (BATCH_RESPONSES_DIR / 'reference_sample.md').exists(),
         'batches': {}
     }
 
-    for i in range(2, 9):
+    for i in range(1, 9):
         status['batches'][i] = (BATCH_RESPONSES_DIR / f'batch_{i}_response.md').exists()
 
     return status
@@ -427,6 +437,12 @@ def load_existing_batch(batch_num: int) -> str:
         return f.read()
 
 
+def load_existing_reference_sample() -> str:
+    """Load existing reference sample."""
+    with open(BATCH_RESPONSES_DIR / "reference_sample.md", "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def main(resume: bool = True):
     """Main pipeline execution.
 
@@ -438,18 +454,18 @@ def main(resume: bool = True):
     print("="*60)
 
     # Load raw data
-    print(f"\nLoading data from: {RAWDATA_PATH}")
-    all_rows = load_csv(RAWDATA_PATH)
+    print(f"\nLoading data from: {RAW_DATA_PATH}")
+    all_rows = load_csv(RAW_DATA_PATH)
     print(f"✓ Loaded {len(all_rows)} rows")
 
     # Check existing files if resume mode
-    status = check_existing_files() if resume else {'feature_spec': False, 'batch_1': False, 'batches': {}}
+    status = check_existing_files() if resume else {'feature_spec': False, 'reference_sample': False, 'batches': {}}
 
     if resume:
         print("\nChecking for existing progress...")
         print(f"  - {FEATURE_SPEC_PATH.name}: {'✓ Found' if status['feature_spec'] else '✗ Missing'}")
-        print(f"  - batch_1_response.md: {'✓ Found' if status['batch_1'] else '✗ Missing'}")
-        for i in range(2, 9):
+        print(f"  - reference_sample.md: {'✓ Found' if status['reference_sample'] else '✗ Missing'}")
+        for i in range(1, 9):
             if status['batches'].get(i):
                 print(f"  - batch_{i}_response.md: ✓ Found")
 
@@ -463,24 +479,21 @@ def main(resume: bool = True):
     else:
         feature_spec = step1_feature_design(all_rows)
 
-    # Step 2: Batch 1 (with Feature_Value_Reference)
-    if status['batch_1']:
+    # Step 2: Create Reference Sample (stratified sampling from entire dataset)
+    if status['reference_sample']:
         print("\n" + "="*60)
-        print("STEP 2: Data Generation Batch 1/8 (SKIPPED - using existing)")
+        print("STEP 2: Reference Sample Creation (SKIPPED - using existing)")
         print("="*60)
-        batch_1_response = load_existing_batch(1)
-        feature_ref = batch_1_response
-        print("✓ Loaded existing batch_1_response.md")
+        feature_ref = load_existing_reference_sample()
+        print("✓ Loaded existing reference_sample.md")
     else:
-        batch_1_rows = all_rows[:BATCH_SIZE]
-        batch_1_response, feature_ref = step2_batch1_generation(batch_1_rows, feature_spec)
+        feature_ref, _ = step2_create_reference_sample(all_rows, feature_spec)
 
-    batch_responses = [batch_1_response]
-
-    # Step 3: Batches 2-8
+    # Step 3: Generate all 8 batches using the reference
     num_batches = (len(all_rows) + BATCH_SIZE - 1) // BATCH_SIZE
+    batch_responses = []
 
-    for batch_num in range(2, num_batches + 1):
+    for batch_num in range(1, num_batches + 1):
         if status['batches'].get(batch_num):
             print("\n" + "="*60)
             print(f"STEP 3: Data Generation Batch {batch_num}/8 (SKIPPED - using existing)")
@@ -492,7 +505,7 @@ def main(resume: bool = True):
             end_idx = min(batch_num * BATCH_SIZE, len(all_rows))
             batch_rows = all_rows[start_idx:end_idx]
 
-            response = step3_subsequent_batches(batch_num, batch_rows, feature_spec, feature_ref)
+            response = step3_batch_generation(batch_num, batch_rows, feature_spec, feature_ref)
 
         batch_responses.append(response)
 
@@ -505,8 +518,8 @@ def main(resume: bool = True):
     print(f"\nOutput file: {OUTPUT_PATH}")
     print("\nGenerated files:")
     print(f"  - {FEATURE_SPEC_PATH.relative_to(FEATURE_SPEC_PATH.parents[1])}")
-    print("  - batch_1_response.md (includes Feature_Value_Reference)")
-    print("  - batch_2_response.md ... batch_8_response.md")
+    print("  - reference_sample.md (stratified reference for all batches)")
+    print("  - batch_1_response.md ... batch_8_response.md")
     print(f"  - {OUTPUT_PATH}")
 
 
